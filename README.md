@@ -45,7 +45,17 @@ npx supabase start        # ローカルにPostgres/Auth/Studioなどを起動�
 3. Authentication > Providers で Email（Password もしくは Magic Link）を有効化する
 4. Project Settings > API から `Project URL` と `anon public` キーを取得し、`.env` に設定する
 
-GitHub Pagesへのデプロイ手順は、デプロイ機能の実装時にあわせて追記します。
+### GitHub Pagesへのデプロイ
+
+`main` へのpushをトリガーに、[.github/workflows/deploy.yml](.github/workflows/deploy.yml) が自動的にビルド・公開します。事前に以下の設定が必要です（初回のみ）。
+
+1. **Pagesの公開元をGitHub Actionsにする**: リポジトリの Settings → Pages → Build and deployment → Source で「GitHub Actions」を選択する
+2. **クラウド上のSupabaseプロジェクトを用意する**（上記「クラウド上のSupabaseプロジェクトを使う場合」の手順）。GitHub Pagesは静的ホスティングのみで実行時に環境変数を読めないため、ローカル開発用の `http://127.0.0.1:54321`（Docker）はデプロイ後のサイトからは使えません。公開用には必ずクラウド上のプロジェクトのURL/anon keyを使ってください
+3. **リポジトリSecretsを設定する**: Settings → Secrets and variables → Actions → New repository secret で以下を登録する
+   - `VITE_SUPABASE_URL`: クラウドプロジェクトの Project URL
+   - `VITE_SUPABASE_ANON_KEY`: クラウドプロジェクトの anon public キー
+
+設定後、`main` にpushすると `https://okmorz.github.io/work1/` に自動デプロイされます（`Actions` タブから進捗を確認できます）。Secretsが未設定・不正な場合、ビルド自体は成功しますが公開されたアプリはSupabaseクライアントの初期化エラーで真っ白な画面になります。
 
 ## 認証・同期の挙動
 
