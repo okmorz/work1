@@ -1,13 +1,12 @@
 import { Link } from 'react-router-dom'
 import { CategoryBreakdownChart } from '../components/dashboard/CategoryBreakdownChart'
 import { SpendableAmountCard } from '../components/dashboard/SpendableAmountCard'
-import { useExpenses } from '../hooks/useExpenses'
-import { useSavingsGoal } from '../hooks/useSavingsGoal'
+import { SyncStatusIndicator } from '../components/dashboard/SyncStatusIndicator'
+import { useData } from '../contexts/DataContext'
 import { toMonthKey } from '../utils/date'
 
 export function DashboardPage() {
-  const { goal } = useSavingsGoal()
-  const { expenses } = useExpenses()
+  const { goal, expenses } = useData()
 
   if (!goal) {
     return (
@@ -30,6 +29,9 @@ export function DashboardPage() {
 
   return (
     <div className="space-y-6">
+      <div className="flex justify-end">
+        <SyncStatusIndicator />
+      </div>
       <SpendableAmountCard goal={goal} expenses={expenses} />
       <div>
         <h2 className="mb-2 text-sm font-semibold text-gray-600">
@@ -38,7 +40,6 @@ export function DashboardPage() {
         <CategoryBreakdownChart expenses={expensesThisMonth} />
       </div>
       {/* TODO: 月末フィードバックメッセージ */}
-      {/* TODO: 同期状態インジケーター */}
     </div>
   )
 }

@@ -45,3 +45,8 @@ create policy "savings_goals_update_own" on savings_goals
   for update using (auth.uid() = user_id) with check (auth.uid() = user_id);
 create policy "savings_goals_delete_own" on savings_goals
   for delete using (auth.uid() = user_id);
+
+-- RLSは行を絞り込むだけで、テーブルへのアクセス自体は別途GRANTが必要
+grant usage on schema public to authenticated;
+grant select, insert, update, delete on expenses to authenticated;
+grant select, insert, update, delete on savings_goals to authenticated;

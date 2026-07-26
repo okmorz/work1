@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { ExpenseList } from '../components/expense/ExpenseList'
-import { useExpenses } from '../hooks/useExpenses'
+import { useData } from '../contexts/DataContext'
 import { CATEGORIES, type Category } from '../types/expense'
 import { toMonthKey } from '../utils/date'
 import { formatYen } from '../utils/format'
@@ -8,7 +8,7 @@ import { formatYen } from '../utils/format'
 type CategoryFilter = Category | 'all'
 
 export function ExpenseListPage() {
-  const { expenses, deleteExpense } = useExpenses()
+  const { expenses, deleteExpense } = useData()
   const [month, setMonth] = useState(() => toMonthKey(new Date()))
   const [category, setCategory] = useState<CategoryFilter>('all')
 

@@ -3,6 +3,7 @@ import type { SavingsGoal } from '../types/savingsGoal'
 
 const EXPENSES_KEY = 'kakeibo:expenses'
 const SAVINGS_GOAL_KEY = 'kakeibo:savingsGoal'
+const PENDING_DELETES_KEY = 'kakeibo:pendingDeletes'
 
 function readJson<T>(key: string, fallback: T): T {
   const raw = localStorage.getItem(key)
@@ -32,4 +33,20 @@ export function loadSavingsGoal(): SavingsGoal | null {
 
 export function saveSavingsGoal(goal: SavingsGoal): void {
   writeJson(SAVINGS_GOAL_KEY, goal)
+}
+
+/** Supabaseへの削除リクエストがまだ成功していない支出IDのトゥームストーン */
+export function loadPendingDeletes(): string[] {
+  return readJson<string[]>(PENDING_DELETES_KEY, [])
+}
+
+export function savePendingDeletes(ids: string[]): void {
+  writeJson(PENDING_DELETES_KEY, ids)
+}
+
+/** サインアウト時に呼び、端末を共有する次のユーザーへのデータ漏えいを防ぐ */
+export function clearAllLocalData(): void {
+  localStorage.removeItem(EXPENSES_KEY)
+  localStorage.removeItem(SAVINGS_GOAL_KEY)
+  localStorage.removeItem(PENDING_DELETES_KEY)
 }

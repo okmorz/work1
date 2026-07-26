@@ -3,7 +3,7 @@ import { CATEGORIES, type Category, type Expense } from '../../types/expense'
 
 interface ExpenseFormProps {
   initialExpense?: Expense
-  onSubmit: (input: Omit<Expense, 'id'>) => void
+  onSubmit: (input: Omit<Expense, 'id' | 'syncedAt'>) => void
 }
 
 function today(): string {
@@ -19,12 +19,24 @@ export function ExpenseForm({ initialExpense, onSubmit }: ExpenseFormProps) {
     initialExpense?.category ?? CATEGORIES[0],
   )
   const [memo, setMemo] = useState(initialExpense?.memo ?? '')
+  const [otherCategoryLabel, setOtherCategoryLabel] = useState(
+    initialExpense?.otherCategoryLabel ?? '',
+  )
 
   function handleSubmit(e: FormEvent) {
     e.preventDefault()
     const amount = Number(amountInput)
     if (!date || !amount) return
-    onSubmit({ date, amount, category, memo })
+    onSubmit({
+      date,
+      amount,
+      category,
+      memo,
+      otherCategoryLabel:
+        category === 'その他' && otherCategoryLabel.trim()
+          ? otherCategoryLabel.trim()
+          : undefined,
+    })
   }
 
   return (
@@ -74,6 +86,21 @@ export function ExpenseForm({ initialExpense, onSubmit }: ExpenseFormProps) {
           ))}
         </select>
       </label>
+
+      {category === 'その他' && (
+        <label className="block">
+          <span className="mb-1 block text-sm font-medium text-gray-700">
+            「その他」の内容（自由記述）
+          </span>
+          <input
+            type="text"
+            value={otherCategoryLabel}
+            onChange={(e) => setOtherCategoryLabel(e.target.value)}
+            className="w-full rounded-md border border-gray-300 px-3 py-2"
+            placeholder="例: 医療費"
+          />
+        </label>
+      )}
 
       <label className="block">
         <span className="mb-1 block text-sm font-medium text-gray-700">

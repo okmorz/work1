@@ -53,7 +53,9 @@ export function ExpenseList({ expenses, onDelete }: ExpenseListProps) {
               >
                 <div>
                   <p className="text-sm font-medium text-gray-900">
-                    {expense.category}
+                    {expense.category === 'その他' && expense.otherCategoryLabel
+                      ? `その他（${expense.otherCategoryLabel}）`
+                      : expense.category}
                   </p>
                   {expense.memo && (
                     <p className="text-xs text-gray-500">{expense.memo}</p>

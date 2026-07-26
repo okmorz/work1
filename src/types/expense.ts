@@ -21,5 +21,7 @@ export interface Expense {
   amount: number
   memo: string
   category: Category
+  /** カテゴリが「その他」のときの自由記述ラベル */
+  otherCategoryLabel?: string
   syncedAt?: string
 }

@@ -1,11 +1,11 @@
 import { useNavigate, useParams } from 'react-router-dom'
 import { ExpenseForm } from '../components/expense/ExpenseForm'
-import { useExpenses } from '../hooks/useExpenses'
+import { useData } from '../contexts/DataContext'
 
 export function ExpenseFormPage() {
   const { id } = useParams()
   const navigate = useNavigate()
-  const { expenses, addExpense, updateExpense } = useExpenses()
+  const { expenses, addExpense, updateExpense } = useData()
   const editingExpense = id ? expenses.find((e) => e.id === id) : undefined
 
   return (

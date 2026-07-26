@@ -1,9 +1,9 @@
 import { useNavigate } from 'react-router-dom'
 import { GoalForm } from '../components/goal/GoalForm'
-import { useSavingsGoal } from '../hooks/useSavingsGoal'
+import { useData } from '../contexts/DataContext'
 
 export function GoalSettingPage() {
-  const { goal, setGoal } = useSavingsGoal()
+  const { goal, setGoal } = useData()
   const navigate = useNavigate()
 
   return (
