@@ -24,7 +24,28 @@ cp .env.example .env   # VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY を設定
 npm run dev
 ```
 
-Supabaseのプロジェクト作成手順・テーブル作成SQL・RLSポリシー設定、GitHub Pagesへのデプロイ手順は、該当機能の実装時にあわせて追記します。
+### Supabaseのセットアップ
+
+テーブル定義・RLSポリシーは [supabase/migrations/](supabase/migrations/) にSQLとして管理しています。
+
+#### ローカル開発（Docker Desktopが必要）
+
+```bash
+npx supabase start        # ローカルにPostgres/Auth/Studioなどを起動（初回はDockerイメージの取得あり）
+```
+
+起動後にターミナルへ表示される `API URL` と `anon key` を `.env` の `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` に設定してください。マイグレーションは `supabase start` 時、および `npx supabase db reset` 実行時に自動的に適用されます。Supabase Studio（`http://127.0.0.1:54323`）からテーブルやAuthユーザーを確認できます。
+
+#### クラウド上のSupabaseプロジェクトを使う場合
+
+1. [Supabase](https://supabase.com/dashboard) で新規プロジェクトを作成する
+2. 以下のいずれかの方法でマイグレーションを適用する
+   - SQL Editorで [supabase/migrations/20260726231826_init_schema.sql](supabase/migrations/20260726231826_init_schema.sql) の内容を実行する
+   - または `npx supabase link --project-ref <project-ref>` でプロジェクトを紐付け、`npx supabase db push` でマイグレーションを適用する
+3. Authentication > Providers で Email（Password もしくは Magic Link）を有効化する
+4. Project Settings > API から `Project URL` と `anon public` キーを取得し、`.env` に設定する
+
+GitHub Pagesへのデプロイ手順は、デプロイ機能の実装時にあわせて追記します。
 
 ## 注意点
 
@@ -49,5 +70,8 @@ src/
     expense/             # 支出入力・一覧用パーツ（今後追加）
     goal/                # 目標設定用パーツ（今後追加）
   hooks/                 # 状態管理用カスタムフック（今後追加）
+supabase/
+  config.toml            # ローカルSupabase CLIの設定
+  migrations/             # テーブル定義・RLSポリシーのSQL
 scripts/                 # 将来的なPython拡張用（必須ではない）
 ```
