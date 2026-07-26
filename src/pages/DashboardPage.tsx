@@ -1,13 +1,42 @@
+import { Link } from 'react-router-dom'
+import { CategoryBreakdownChart } from '../components/dashboard/CategoryBreakdownChart'
+import { SpendableAmountCard } from '../components/dashboard/SpendableAmountCard'
+import { useExpenses } from '../hooks/useExpenses'
+import { useSavingsGoal } from '../hooks/useSavingsGoal'
+import { toMonthKey } from '../utils/date'
+
 export function DashboardPage() {
+  const { goal } = useSavingsGoal()
+  const { expenses } = useExpenses()
+
+  if (!goal) {
+    return (
+      <div className="rounded-lg bg-white p-6 text-center shadow-sm">
+        <p className="mb-4 text-sm text-gray-600">
+          まだ貯金目標が設定されていません。
+        </p>
+        <Link
+          to="/goal"
+          className="inline-block rounded-md bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700"
+        >
+          目標を設定する
+        </Link>
+      </div>
+    )
+  }
+
+  const currentMonth = toMonthKey(new Date())
+  const expensesThisMonth = expenses.filter((e) => e.date.startsWith(currentMonth))
+
   return (
     <div className="space-y-6">
-      <section className="rounded-lg bg-white p-6 text-center shadow-sm">
-        <p className="text-sm text-gray-500">今月あと使える金額</p>
-        <p className="text-3xl font-bold text-blue-600">-- 円</p>
-        <p className="mt-4 text-sm text-gray-500">今日あと使える金額</p>
-        <p className="text-2xl font-bold text-blue-600">-- 円</p>
-      </section>
-      {/* TODO: カテゴリ別支出グラフ */}
+      <SpendableAmountCard goal={goal} expenses={expenses} />
+      <div>
+        <h2 className="mb-2 text-sm font-semibold text-gray-600">
+          今月のカテゴリ別支出
+        </h2>
+        <CategoryBreakdownChart expenses={expensesThisMonth} />
+      </div>
       {/* TODO: 月末フィードバックメッセージ */}
       {/* TODO: 同期状態インジケーター */}
     </div>

@@ -13,6 +13,7 @@ function App() {
       <Route element={<AppLayout />}>
         <Route path="/" element={<DashboardPage />} />
         <Route path="/expenses/new" element={<ExpenseFormPage />} />
+        <Route path="/expenses/:id/edit" element={<ExpenseFormPage />} />
         <Route path="/expenses" element={<ExpenseListPage />} />
         <Route path="/goal" element={<GoalSettingPage />} />
       </Route>

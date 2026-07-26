@@ -27,3 +27,9 @@ export function remainingMonthsInclusive(
 ): number {
   return Math.max(0, monthsBetweenInclusive(currentMonth, endMonth))
 }
+
+export function addMonths(monthKey: string, delta: number): string {
+  const [year, month] = monthKey.split('-').map(Number)
+  const date = new Date(year, month - 1 + delta, 1)
+  return toMonthKey(date)
+}

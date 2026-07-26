@@ -1,8 +1,21 @@
+import { useNavigate } from 'react-router-dom'
+import { GoalForm } from '../components/goal/GoalForm'
+import { useSavingsGoal } from '../hooks/useSavingsGoal'
+
 export function GoalSettingPage() {
+  const { goal, setGoal } = useSavingsGoal()
+  const navigate = useNavigate()
+
   return (
-    <div>
+    <div className="mx-auto max-w-md">
       <h1 className="mb-4 text-xl font-semibold">目標設定</h1>
-      {/* TODO: 年間/月間目標貯金額、開始月・終了月の入力・変更 */}
+      <GoalForm
+        initialGoal={goal}
+        onSubmit={(nextGoal) => {
+          setGoal(nextGoal)
+          navigate('/')
+        }}
+      />
     </div>
   )
 }

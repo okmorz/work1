@@ -26,7 +26,10 @@ export function spendableThisMonth(
   const remainingMonths = remainingMonthsInclusive(currentMonth, goal.endMonth)
   if (remainingMonths <= 0) return 0
 
-  const remainingTotal = remainingBudgetTotal(goal, allExpenses)
+  const expensesSinceStart = allExpenses.filter(
+    (e) => e.date.slice(0, 7) >= goal.startMonth,
+  )
+  const remainingTotal = remainingBudgetTotal(goal, expensesSinceStart)
   const perMonthBudget = remainingTotal / remainingMonths
   const spentThisMonth = totalSpent(allExpenses, currentMonth)
   return perMonthBudget - spentThisMonth
