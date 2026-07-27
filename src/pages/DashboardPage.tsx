@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { CategoryBreakdownChart } from '../components/dashboard/CategoryBreakdownChart'
+import { MonthEndFeedback } from '../components/dashboard/MonthEndFeedback'
 import { SpendableAmountCard } from '../components/dashboard/SpendableAmountCard'
 import { SyncStatusIndicator } from '../components/dashboard/SyncStatusIndicator'
 import { useData } from '../contexts/DataContext'
@@ -32,6 +33,7 @@ export function DashboardPage() {
       <div className="flex justify-end">
         <SyncStatusIndicator />
       </div>
+      <MonthEndFeedback goal={goal} expenses={expenses} />
       <SpendableAmountCard goal={goal} expenses={expenses} />
       <div>
         <h2 className="mb-2 text-sm font-semibold text-gray-600">
@@ -39,7 +41,6 @@ export function DashboardPage() {
         </h2>
         <CategoryBreakdownChart expenses={expensesThisMonth} />
       </div>
-      {/* TODO: 月末フィードバックメッセージ */}
     </div>
   )
 }

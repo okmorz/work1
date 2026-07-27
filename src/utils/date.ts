@@ -33,3 +33,7 @@ export function addMonths(monthKey: string, delta: number): string {
   const date = new Date(year, month - 1 + delta, 1)
   return toMonthKey(date)
 }
+
+export function isLastDayOfMonth(date: Date): boolean {
+  return date.getDate() === daysInMonth(toMonthKey(date))
+}

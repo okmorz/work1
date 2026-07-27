@@ -4,6 +4,7 @@ import type { SavingsGoal } from '../types/savingsGoal'
 const EXPENSES_KEY = 'kakeibo:expenses'
 const SAVINGS_GOAL_KEY = 'kakeibo:savingsGoal'
 const PENDING_DELETES_KEY = 'kakeibo:pendingDeletes'
+const DISMISSED_FEEDBACK_MONTH_KEY = 'kakeibo:dismissedFeedbackMonth'
 
 function readJson<T>(key: string, fallback: T): T {
   const raw = localStorage.getItem(key)
@@ -44,9 +45,19 @@ export function savePendingDeletes(ids: string[]): void {
   writeJson(PENDING_DELETES_KEY, ids)
 }
 
+/** 月末フィードバックを閉じた（確認済みの）最後の対象月 */
+export function loadDismissedFeedbackMonth(): string | null {
+  return readJson<string | null>(DISMISSED_FEEDBACK_MONTH_KEY, null)
+}
+
+export function saveDismissedFeedbackMonth(month: string): void {
+  writeJson(DISMISSED_FEEDBACK_MONTH_KEY, month)
+}
+
 /** サインアウト時に呼び、端末を共有する次のユーザーへのデータ漏えいを防ぐ */
 export function clearAllLocalData(): void {
   localStorage.removeItem(EXPENSES_KEY)
   localStorage.removeItem(SAVINGS_GOAL_KEY)
   localStorage.removeItem(PENDING_DELETES_KEY)
+  localStorage.removeItem(DISMISSED_FEEDBACK_MONTH_KEY)
 }
