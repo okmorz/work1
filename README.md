@@ -10,11 +10,12 @@
 - グラフ: Recharts
 - データ永続化: ブラウザ `localStorage`（即時反映・オフライン対応）
 - データ同期・認証: [Supabase](https://supabase.com/)（PostgreSQL + Auth + 自動生成REST API）
+- PWA: [vite-plugin-pwa](https://vite-pwa-org.netlify.app/)（ホーム画面への追加・静的ファイルのオフラインキャッシュ）
 - ホスティング: GitHub Pages（静的サイト）
 
 ## 現在の状態
 
-目標設定・支出記録/一覧・ダッシュボード・Supabase Authによるログイン・Supabaseへのデータ同期を実装済みです。GitHub Pagesへのデプロイと月末フィードバック機能は未実装です。
+目標設定・支出記録/一覧・ダッシュボード・月末フィードバック・支出分析（統計ベース）・Supabase Authによるログイン・Supabaseへのデータ同期・PWA化まで実装済みです。GitHub Pagesへの実際のデプロイ実行は保留中です。
 
 ## セットアップ
 
@@ -57,6 +58,15 @@ npx supabase start        # ローカルにPostgres/Auth/Studioなどを起動�
 
 設定後、`main` にpushすると `https://okmorz.github.io/work1/` に自動デプロイされます（`Actions` タブから進捗を確認できます）。Secretsが未設定・不正な場合、ビルド自体は成功しますが公開されたアプリはSupabaseクライアントの初期化エラーで真っ白な画面になります。
 
+## PWA（ホーム画面に追加して使う）
+
+`npm run build` の成果物には Web App Manifest（`manifest.webmanifest`）と Service Worker（`sw.js`）が含まれ、スマートフォンやPCのブラウザから「ホーム画面に追加」「インストール」でアプリのように起動できます。
+
+- **キャッシュ対象は静的ファイルのみ**: `sw.js` はJS/CSS/HTML/アイコンなどの同一オリジンのファイルだけをキャッシュし、Supabase（別オリジン）へのAPI/認証リクエストは一切キャッシュしません（`vite.config.ts` の `VitePWA` 設定に意図的に `runtimeCaching` を追加していません）。そのため、オフラインでも**アプリ自体は起動**しますが、Supabaseとの同期はオンライン時のみ動作します（データ自体は従来通り `localStorage` にあるためオフラインでも入力・閲覧は可能です）。
+- **アイコン**: `public/icon-192.png` / `icon-512.png` / `icon-maskable-512.png` / `favicon-48.png`。差し替える場合はこのファイル名のまま置き換えれば `vite.config.ts` の設定はそのまま使えます。
+- **動作確認方法**: 開発サーバー（`npm run dev`）ではPWA機能は無効化されているため、`npm run build && npm run preview` でビルド成果物を確認してください。
+- Service Workerの更新方式は `autoUpdate`（新しいビルドが公開されると自動的に最新版へ更新されます）。
+
 ## 認証・同期の挙動
 
 - ログインしていない状態で `/` 以下にアクセスすると `/login` にリダイレクトされます（Supabase Auth のEmail/Passwordでログイン・新規登録）。
@@ -77,16 +87,19 @@ src/
   index.css             # Tailwind CSS の読み込み
   vite-env.d.ts         # Vite/環境変数の型定義
   types/                # ドメイン型（Expense, SavingsGoal）
-  lib/                  # supabaseClient, localStorage操作, Supabase同期API, マージロジック
+  lib/                  # supabaseClient, localStorage操作, Supabase同期API, マージロジック, カテゴリ配色
   contexts/              # AuthContext（セッション）, DataContext（データ+同期の状態管理）
-  utils/                # 日付計算・「使える金額」計算ロジック
-  pages/                # 画面単位のコンポーネント（ログイン/ダッシュボード/支出入力・一覧/目標設定）
+  utils/                # 日付計算・「使える金額」計算・月末フィードバック・支出分析(統計)ロジック
+  pages/                # 画面単位のコンポーネント（ログイン/ダッシュボード/支出入力・一覧/目標設定/支出分析）
   components/
     auth/                # RequireAuth（未ログイン時のリダイレクト）
     layout/              # 共通レイアウト・ナビゲーション・ログアウト
-    dashboard/           # 使える金額カード・カテゴリ別グラフ・同期状態インジケーター
+    dashboard/           # 使える金額カード・カテゴリ別グラフ・月末フィードバック・同期状態インジケーター
     expense/             # 支出入力フォーム・一覧
     goal/                # 目標設定フォーム
+    stats/               # 支出分析（月次推移・逸脱検知・前月比/前年同月比・曜日パターン・目標予測）
+public/
+  icon-*.png, favicon-48.png  # PWAアイコン
 supabase/
   config.toml            # ローカルSupabase CLIの設定
   migrations/             # テーブル定義・RLSポリシーのSQL
