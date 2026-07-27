@@ -7,6 +7,7 @@ import { ExpenseFormPage } from './pages/ExpenseFormPage'
 import { ExpenseListPage } from './pages/ExpenseListPage'
 import { GoalSettingPage } from './pages/GoalSettingPage'
 import { LoginPage } from './pages/LoginPage'
+import { StatsPage } from './pages/StatsPage'
 
 function App() {
   return (
@@ -25,6 +26,7 @@ function App() {
           <Route path="/expenses/:id/edit" element={<ExpenseFormPage />} />
           <Route path="/expenses" element={<ExpenseListPage />} />
           <Route path="/goal" element={<GoalSettingPage />} />
+          <Route path="/stats" element={<StatsPage />} />
         </Route>
       </Route>
     </Routes>

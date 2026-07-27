@@ -1,17 +1,14 @@
 import { useState, type FormEvent } from 'react'
 import { CATEGORIES, type Category, type Expense } from '../../types/expense'
+import { toISODate } from '../../utils/date'
 
 interface ExpenseFormProps {
   initialExpense?: Expense
   onSubmit: (input: Omit<Expense, 'id' | 'syncedAt'>) => void
 }
 
-function today(): string {
-  return new Date().toISOString().slice(0, 10)
-}
-
 export function ExpenseForm({ initialExpense, onSubmit }: ExpenseFormProps) {
-  const [date, setDate] = useState(initialExpense?.date ?? today())
+  const [date, setDate] = useState(initialExpense?.date ?? toISODate(new Date()))
   const [amountInput, setAmountInput] = useState(
     initialExpense ? String(initialExpense.amount) : '',
   )
