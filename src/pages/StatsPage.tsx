@@ -7,7 +7,7 @@ import { WeekdayPatternChart } from '../components/stats/WeekdayPatternChart'
 import { useData } from '../contexts/DataContext'
 
 export function StatsPage() {
-  const { goal, expenses } = useData()
+  const { goal, expenses, incomes } = useData()
 
   return (
     <div className="space-y-8">
@@ -18,7 +18,7 @@ export function StatsPage() {
           <h2 className="mb-2 text-sm font-semibold text-gray-600">
             目標達成予測
           </h2>
-          <GoalForecastCard goal={goal} expenses={expenses} />
+          <GoalForecastCard goal={goal} expenses={expenses} incomes={incomes} />
         </section>
       ) : (
         <p className="rounded-lg bg-white p-6 text-center text-sm text-gray-600 shadow-sm">

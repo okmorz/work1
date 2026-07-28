@@ -7,6 +7,8 @@ import { ExpenseFormPage } from './pages/ExpenseFormPage'
 import { ExpenseListPage } from './pages/ExpenseListPage'
 import { GoalSettingPage } from './pages/GoalSettingPage'
 import { GuidePage } from './pages/GuidePage'
+import { IncomeFormPage } from './pages/IncomeFormPage'
+import { IncomeListPage } from './pages/IncomeListPage'
 import { LoginPage } from './pages/LoginPage'
 import { StatsPage } from './pages/StatsPage'
 
@@ -27,6 +29,9 @@ function App() {
           <Route path="/expenses/new" element={<ExpenseFormPage />} />
           <Route path="/expenses/:id/edit" element={<ExpenseFormPage />} />
           <Route path="/expenses" element={<ExpenseListPage />} />
+          <Route path="/income/new" element={<IncomeFormPage />} />
+          <Route path="/income/:id/edit" element={<IncomeFormPage />} />
+          <Route path="/income" element={<IncomeListPage />} />
           <Route path="/goal" element={<GoalSettingPage />} />
           <Route path="/stats" element={<StatsPage />} />
         </Route>

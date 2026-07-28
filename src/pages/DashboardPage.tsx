@@ -7,7 +7,7 @@ import { useData } from '../contexts/DataContext'
 import { toMonthKey } from '../utils/date'
 
 export function DashboardPage() {
-  const { goal, expenses } = useData()
+  const { goal, expenses, incomes } = useData()
 
   if (!goal) {
     return (
@@ -43,8 +43,8 @@ export function DashboardPage() {
         </Link>
         <SyncStatusIndicator />
       </div>
-      <MonthEndFeedback goal={goal} expenses={expenses} />
-      <SpendableAmountCard goal={goal} expenses={expenses} />
+      <MonthEndFeedback goal={goal} expenses={expenses} incomes={incomes} />
+      <SpendableAmountCard goal={goal} expenses={expenses} incomes={incomes} />
       <div>
         <h2 className="mb-2 text-sm font-semibold text-gray-600">
           今月のカテゴリ別支出

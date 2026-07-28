@@ -1,6 +1,7 @@
 import { CATEGORIES, type Category, type Expense } from '../types/expense'
+import type { Income } from '../types/income'
 import type { SavingsGoal } from '../types/savingsGoal'
-import { totalSpent } from './calculations'
+import { totalAmount } from './calculations'
 import {
   addMonths,
   daysBetweenInclusive,
@@ -32,13 +33,13 @@ export function categoryMonthlyTrend(
     const amounts = Object.fromEntries(
       CATEGORIES.map((category) => [
         category,
-        totalSpent(
+        totalAmount(
           expenses.filter((e) => e.category === category),
           month,
         ),
       ]),
     ) as Record<Category, number>
-    return { month, amounts, total: totalSpent(expenses, month) }
+    return { month, amounts, total: totalAmount(expenses, month) }
   })
 }
 
@@ -79,7 +80,7 @@ export function categoryDeviationAnalysis(
   const lookbackMonths = Array.from({ length: DEVIATION_LOOKBACK_MONTHS }, (_, i) =>
     addMonths(currentMonth, -(i + 1)),
   )
-  const activeMonths = lookbackMonths.filter((month) => totalSpent(expenses, month) > 0)
+  const activeMonths = lookbackMonths.filter((month) => totalAmount(expenses, month) > 0)
 
   if (activeMonths.length < MIN_ACTIVE_MONTHS_FOR_DEVIATION) {
     return {
@@ -92,10 +93,10 @@ export function categoryDeviationAnalysis(
   const insights: CategoryDeviationInsight[] = []
   for (const category of CATEGORIES) {
     const categoryExpenses = expenses.filter((e) => e.category === category)
-    const pastAmounts = activeMonths.map((month) => totalSpent(categoryExpenses, month))
+    const pastAmounts = activeMonths.map((month) => totalAmount(categoryExpenses, month))
     const average = pastAmounts.reduce((sum, v) => sum + v, 0) / pastAmounts.length
     const stdDev = sampleStdDev(pastAmounts)
-    const currentAmount = totalSpent(categoryExpenses, currentMonth)
+    const currentAmount = totalAmount(categoryExpenses, currentMonth)
 
     if (currentAmount > average + stdDev) {
       insights.push({ category, currentAmount, average, stdDev, direction: 'high' })
@@ -155,13 +156,13 @@ export function periodComparisons(
 
   const total = {
     monthOverMonth: buildComparison(
-      totalSpent(expenses, currentMonth),
-      totalSpent(expenses, previousMonth),
+      totalAmount(expenses, currentMonth),
+      totalAmount(expenses, previousMonth),
       hasPreviousMonthData,
     ),
     yearOverYear: buildComparison(
-      totalSpent(expenses, currentMonth),
-      totalSpent(expenses, sameMonthLastYear),
+      totalAmount(expenses, currentMonth),
+      totalAmount(expenses, sameMonthLastYear),
       hasLastYearData,
     ),
   }
@@ -171,13 +172,13 @@ export function periodComparisons(
     return {
       category,
       monthOverMonth: buildComparison(
-        totalSpent(categoryExpenses, currentMonth),
-        totalSpent(categoryExpenses, previousMonth),
+        totalAmount(categoryExpenses, currentMonth),
+        totalAmount(categoryExpenses, previousMonth),
         hasPreviousMonthData,
       ),
       yearOverYear: buildComparison(
-        totalSpent(categoryExpenses, currentMonth),
-        totalSpent(categoryExpenses, sameMonthLastYear),
+        totalAmount(categoryExpenses, currentMonth),
+        totalAmount(categoryExpenses, sameMonthLastYear),
         hasLastYearData,
       ),
     }
@@ -226,7 +227,7 @@ export function weekdayWeekendInsight(expenses: Expense[]): WeekdayWeekendInsigh
 
   for (const category of CATEGORIES) {
     const categoryExpenses = expenses.filter((e) => e.category === category)
-    const total = totalSpent(categoryExpenses)
+    const total = totalAmount(categoryExpenses)
     if (total < MIN_TOTAL_FOR_WEEKEND_INSIGHT) continue
 
     const weekendTotal = categoryExpenses
@@ -255,8 +256,10 @@ export function weekdayWeekendInsight(expenses: Expense[]): WeekdayWeekendInsigh
 // ---------- 目標達成予測 ----------
 
 export interface GoalForecast {
-  averageDailySpend: number
-  projectedTotalSpend: number
+  /** 1日あたりの純支出ペース（支出−収入）。負なら収入の方が多いペース */
+  averageDailyNetSpend: number
+  /** このペースで目標期間の最後まで進んだ場合の純支出（支出−収入）合計 */
+  projectedNetSpend: number
   yearlyTargetAmount: number
   projectedSurplus: number
   onTrack: boolean
@@ -264,10 +267,11 @@ export interface GoalForecast {
   isFinal: boolean
 }
 
-/** 現在までの支出ペースが目標期間の最後まで続いた場合の着地予測 */
+/** 現在までの純支出（支出−収入）ペースが目標期間の最後まで続いた場合の着地予測 */
 export function goalForecast(
   goal: SavingsGoal,
   expenses: Expense[],
+  incomes: Income[],
   today: Date = new Date(),
 ): GoalForecast | null {
   const startDate = firstDayOfMonth(goal.startMonth)
@@ -278,19 +282,19 @@ export function goalForecast(
   const elapsedDays = daysBetweenInclusive(startDate, elapsedEndDate)
   const totalDays = daysBetweenInclusive(startDate, endDate)
 
-  const spentSoFar = totalSpent(
-    expenses.filter(
-      (e) => e.date >= `${goal.startMonth}-01` && e.date <= toISODate(elapsedEndDate),
-    ),
-  )
+  const withinElapsedRange = (r: { date: string }) =>
+    r.date >= `${goal.startMonth}-01` && r.date <= toISODate(elapsedEndDate)
+  const netSoFar =
+    totalAmount(expenses.filter(withinElapsedRange)) -
+    totalAmount(incomes.filter(withinElapsedRange))
 
-  const averageDailySpend = elapsedDays > 0 ? spentSoFar / elapsedDays : 0
-  const projectedTotalSpend = averageDailySpend * totalDays
-  const projectedSurplus = goal.yearlyTargetAmount - projectedTotalSpend
+  const averageDailyNetSpend = elapsedDays > 0 ? netSoFar / elapsedDays : 0
+  const projectedNetSpend = averageDailyNetSpend * totalDays
+  const projectedSurplus = goal.yearlyTargetAmount - projectedNetSpend
 
   return {
-    averageDailySpend,
-    projectedTotalSpend,
+    averageDailyNetSpend,
+    projectedNetSpend,
     yearlyTargetAmount: goal.yearlyTargetAmount,
     projectedSurplus,
     onTrack: projectedSurplus >= 0,

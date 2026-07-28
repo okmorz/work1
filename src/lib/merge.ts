@@ -1,21 +1,25 @@
-import type { Expense } from '../types/expense'
 import type { SavingsGoal } from '../types/savingsGoal'
 
+interface SyncedRecord {
+  id: string
+  syncedAt?: string
+}
+
 /**
- * ローカルとリモートの支出データを突き合わせる。
+ * ローカルとリモートの同期対象データ（支出・収入）を突き合わせる。
  * - まだリモートに送信できていないローカルの変更（syncedAt未設定）は優先して残す
  *   （送信直後にreconcileが走っても上書きされないようにするため）
  * - 過去に同期済みの項目はリモート側を正とする（他端末での更新・削除を反映するため）
  * - pendingDeleteIdsに含まれるものはローカル削除がまだリモートに反映されていないため除外する
  */
-export function mergeExpenses(
-  local: Expense[],
-  remote: Expense[],
+export function mergeSyncedRecords<T extends SyncedRecord>(
+  local: T[],
+  remote: T[],
   pendingDeleteIds: ReadonlySet<string>,
-): Expense[] {
+): T[] {
   const remoteById = new Map(remote.map((r) => [r.id, r]))
   const seen = new Set<string>()
-  const result: Expense[] = []
+  const result: T[] = []
 
   for (const item of local) {
     seen.add(item.id)

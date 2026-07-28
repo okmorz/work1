@@ -5,6 +5,8 @@ const NAV_ITEMS = [
   { to: '/', label: 'ダッシュボード' },
   { to: '/expenses/new', label: '支出を記録' },
   { to: '/expenses', label: '支出一覧' },
+  { to: '/income/new', label: '収入を記録' },
+  { to: '/income', label: '収入一覧' },
   { to: '/stats', label: '支出分析' },
   { to: '/goal', label: '目標設定' },
 ]

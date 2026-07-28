@@ -15,7 +15,11 @@
 
 ## 現在の状態
 
-目標設定・支出記録/一覧・ダッシュボード・月末フィードバック・支出分析（統計ベース）・Supabase Authによるログイン・Supabaseへのデータ同期・PWA化・使い方ガイドページまで実装済みです。GitHub Pages（`https://okmorz.github.io/work1/`）に実際にデプロイ済みです。
+目標設定・支出記録/一覧・収入記録/一覧・ダッシュボード・月末フィードバック・支出分析（統計ベース）・Supabase Authによるログイン・Supabaseへのデータ同期・PWA化・使い方ガイドページまで実装済みです。
+
+「今月・今日あといくら使えるか」「貯金の進み具合」は収入も加味した純額（支出−収入）ベースで計算します（詳細は下記「収入機能と使える金額の計算」を参照）。
+
+GitHub Pages（`https://okmorz.github.io/work1/`）へのデプロイ経路は用意済みですが、**機能修正中のため現在は一時的に非公開**にしています（`gh api -X DELETE repos/okmorz/work1/pages` でPages配信を停止中）。再公開する場合は Settings → Pages → Source を「GitHub Actions」に再設定するか、`gh api repos/okmorz/work1/pages -f build_type=workflow` を実行し、`main` に何かpushしてワークフローを走らせてください。
 
 ## セットアップ
 
@@ -37,11 +41,17 @@ npx supabase start        # ローカルにPostgres/Auth/Studioなどを起動�
 
 起動後にターミナルへ表示される `API URL` と `anon key` を `.env` の `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` に設定してください。マイグレーションは `supabase start` 時、および `npx supabase db reset` 実行時に自動的に適用されます。Supabase Studio（`http://127.0.0.1:54323`）からテーブルやAuthユーザーを確認できます。
 
+> **Windows Smart App Controlが有効な環境での注意**: `node_modules/@supabase/cli-windows-x64/bin/supabase-go.exe` が未署名バイナリとしてブロックされ、`supabase` コマンドが `EUNKNOWN: unknown error, uv_spawn` で失敗することがあります（イベントビューアーの `Microsoft-Windows-CodeIntegrity/Operational` ログで確認可能）。この場合はSupabase CLIを介さず、起動済みのPostgresコンテナに直接マイグレーションSQLを流し込めます。
+> ```bash
+> cat supabase/migrations/<ファイル名>.sql | docker exec -i supabase_db_work1 psql -U postgres -d postgres -v ON_ERROR_STOP=1
+> ```
+> Smart App Control自体の無効化は一度行うとWindowsの再インストールなしに元に戻せないため、この方法を優先してください。
+
 #### クラウド上のSupabaseプロジェクトを使う場合
 
 1. [Supabase](https://supabase.com/dashboard) で新規プロジェクトを作成する
 2. 以下のいずれかの方法でマイグレーションを適用する
-   - SQL Editorで [supabase/migrations/20260726231826_init_schema.sql](supabase/migrations/20260726231826_init_schema.sql) の内容を実行する
+   - SQL Editorで [supabase/migrations/](supabase/migrations/) 配下のSQLファイルを**ファイル名の日時順に**すべて実行する
    - または `npx supabase link --project-ref <project-ref>` でプロジェクトを紐付け、`npx supabase db push` でマイグレーションを適用する
 3. Authentication > Providers で Email（Password もしくは Magic Link）を有効化する
 4. Project Settings > API から `Project URL` と `anon public` キーを取得し、`.env` に設定する
@@ -78,6 +88,15 @@ GitHub Pagesはサーバー側のルーティングを持たない静的ホス�
 - PWAインストール手順のスクリーンショットは [public/guide/](public/guide/) にプレースホルダー画像を置いています。実際の画面キャプチャに差し替える場合は、同じファイル名（`ios-step1.png` など）で上書きしてください
 - ページ自体も他の静的ファイルと同様にService Workerでプリキャッシュされるため、オフラインでも閲覧できます
 
+## 収入機能と使える金額の計算
+
+支出に加えて収入（給与・ボーナス・副業・その他）も記録できます。目標に対する計算はすべて「純額」（支出合計 − 収入合計）ベースに統一しています。
+
+- **今月・今日あといくら使えるか**: その時点で入力済みの収入だけを使って計算します（給与日前などまだ収入が未入力の期間は、見込みで水増しせずシンプルに計算するという方針です）。収入を記録すると即座にその分だけ使える金額が増えます
+- **貯金の進み具合**: 目標開始月からの実績貯金額（収入合計 − 支出合計）を、年間目標貯金額に対する進捗（%）として表示します（ダッシュボードの使える金額カード内）
+- **目標達成予測**（支出分析ページ）: これまでの純支出（支出−収入）のペースが続いた場合の着地予測を表示します
+- 月末フィードバックも純額ベースに更新されており、収入が支出を上回った月は「貯金できました」という表現になります
+
 ## 認証・同期の挙動
 
 - ログインしていない状態で `/` 以下にアクセスすると `/login` にリダイレクトされます（Supabase Auth のEmail/Passwordでログイン・新規登録）。
@@ -97,17 +116,18 @@ src/
   App.tsx               # ルーティング定義
   index.css             # Tailwind CSS の読み込み
   vite-env.d.ts         # Vite/環境変数の型定義
-  types/                # ドメイン型（Expense, SavingsGoal）
+  types/                # ドメイン型（Expense, Income, SavingsGoal）
   lib/                  # supabaseClient, localStorage操作, Supabase同期API, マージロジック, カテゴリ配色
   contexts/              # AuthContext（セッション）, DataContext（データ+同期の状態管理）
   content/                # guide.ts（使い方ガイドページの文言・データ）
-  utils/                # 日付計算・「使える金額」計算・月末フィードバック・支出分析(統計)ロジック
-  pages/                # 画面単位のコンポーネント（ログイン/ガイド/ダッシュボード/支出入力・一覧/目標設定/支出分析）
+  utils/                # 日付計算・「使える金額」計算（収入対応の純額ベース）・月末フィードバック・支出分析(統計)ロジック
+  pages/                # 画面単位のコンポーネント（ログイン/ガイド/ダッシュボード/支出・収入の入力・一覧/目標設定/支出分析）
   components/
     auth/                # RequireAuth（未ログイン時のリダイレクト）
     layout/              # 共通レイアウト・ナビゲーション・ログアウト
-    dashboard/           # 使える金額カード・カテゴリ別グラフ・月末フィードバック・同期状態インジケーター
+    dashboard/           # 使える金額カード（貯金進捗含む）・カテゴリ別グラフ・月末フィードバック・同期状態インジケーター
     expense/             # 支出入力フォーム・一覧
+    income/              # 収入入力フォーム・一覧
     goal/                # 目標設定フォーム
     stats/               # 支出分析（月次推移・逸脱検知・前月比/前年同月比・曜日パターン・目標予測）
     guide/               # 使い方ガイド用パーツ（PWAインストール手順・URLコピー）

@@ -1,5 +1,6 @@
 import { supabase } from './supabaseClient'
 import type { Category, Expense } from '../types/expense'
+import type { Income, IncomeCategory } from '../types/income'
 import type { SavingsGoal } from '../types/savingsGoal'
 
 interface ExpenseRow {
@@ -54,6 +55,58 @@ export async function upsertRemoteExpense(
 
 export async function deleteRemoteExpense(id: string): Promise<void> {
   const { error } = await supabase.from('expenses').delete().eq('id', id)
+  if (error) throw error
+}
+
+interface IncomeRow {
+  id: string
+  date: string
+  amount: number
+  memo: string | null
+  category: IncomeCategory
+}
+
+function rowToIncome(row: IncomeRow): Income {
+  return {
+    id: row.id,
+    date: row.date,
+    amount: row.amount,
+    memo: row.memo ?? '',
+    category: row.category,
+    syncedAt: new Date().toISOString(),
+  }
+}
+
+export async function fetchRemoteIncomes(userId: string): Promise<Income[]> {
+  const { data, error } = await supabase
+    .from('incomes')
+    .select('id, date, amount, memo, category')
+    .eq('user_id', userId)
+  if (error) throw error
+  return (data ?? []).map(rowToIncome)
+}
+
+export async function upsertRemoteIncome(
+  userId: string,
+  income: Income,
+): Promise<void> {
+  const { error } = await supabase.from('incomes').upsert(
+    {
+      id: income.id,
+      user_id: userId,
+      date: income.date,
+      amount: income.amount,
+      memo: income.memo,
+      category: income.category,
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: 'id' },
+  )
+  if (error) throw error
+}
+
+export async function deleteRemoteIncome(id: string): Promise<void> {
+  const { error } = await supabase.from('incomes').delete().eq('id', id)
   if (error) throw error
 }
 

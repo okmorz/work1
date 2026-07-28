@@ -10,11 +10,13 @@ import {
   saveDismissedFeedbackMonth,
 } from '../../lib/storage'
 import type { Expense } from '../../types/expense'
+import type { Income } from '../../types/income'
 import type { SavingsGoal } from '../../types/savingsGoal'
 
 interface MonthEndFeedbackProps {
   goal: SavingsGoal
   expenses: Expense[]
+  incomes: Income[]
 }
 
 function formatMonthLabel(monthKey: string): string {
@@ -22,7 +24,11 @@ function formatMonthLabel(monthKey: string): string {
   return `${year}年${Number(month)}月`
 }
 
-export function MonthEndFeedback({ goal, expenses }: MonthEndFeedbackProps) {
+export function MonthEndFeedback({
+  goal,
+  expenses,
+  incomes,
+}: MonthEndFeedbackProps) {
   const [dismissedMonth, setDismissedMonth] = useState(() =>
     loadDismissedFeedbackMonth(),
   )
@@ -31,10 +37,15 @@ export function MonthEndFeedback({ goal, expenses }: MonthEndFeedbackProps) {
   if (!target) return null
   if (!target.isPreview && dismissedMonth === target.targetMonth) return null
 
-  const { spent, diff } = monthlyBudgetSnapshot(goal, expenses, target.targetMonth)
+  const { spent, diff } = monthlyBudgetSnapshot(
+    goal,
+    expenses,
+    incomes,
+    target.targetMonth,
+  )
   const isOver = diff < 0
   const monthLabel = formatMonthLabel(target.targetMonth)
-  const nextBudget = nextMonthBudget(goal, expenses, target.targetMonth)
+  const nextBudget = nextMonthBudget(goal, expenses, incomes, target.targetMonth)
   const goalPeriodEnded = target.targetMonth >= goal.endMonth
 
   function handleDismiss() {
@@ -64,7 +75,10 @@ export function MonthEndFeedback({ goal, expenses }: MonthEndFeedbackProps) {
       </div>
 
       <p className="mt-2 text-sm text-gray-700">
-        実績: {formatYen(spent)}（目標との差:{' '}
+        {spent >= 0
+          ? `実績: ${formatYen(spent)}使いました（収入差し引き後）`
+          : `実績: ${formatYen(-spent)}貯金できました（収入が支出を上回りました）`}
+        （目標との差:{' '}
         <span
           className={`font-semibold ${isOver ? 'text-red-600' : 'text-green-700'}`}
         >
@@ -86,7 +100,7 @@ export function MonthEndFeedback({ goal, expenses }: MonthEndFeedbackProps) {
 
       <p className="mt-3 text-sm">
         {isOver
-          ? '目標より使いすぎています。来月は少しペースを落としてみましょう。'
+          ? '目標より使いすぎています。来月は少しペースを落とすか、収入を増やす方法を考えてみましょう。'
           : '順調に貯金できています。このペースを維持しましょう！'}
       </p>
     </section>
