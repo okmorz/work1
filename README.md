@@ -58,6 +58,8 @@ npx supabase start        # ローカルにPostgres/Auth/Studioなどを起動�
 
 設定後、`main` にpushすると `https://okmorz.github.io/work1/` に自動デプロイされます（`Actions` タブから進捗を確認できます）。Secretsが未設定・不正な場合、ビルド自体は成功しますが公開されたアプリはSupabaseクライアントの初期化エラーで真っ白な画面になります。
 
+GitHub Pagesはサーバー側のルーティングを持たない静的ホスティングのため、`/guide` のようなクライアントサイドルートへ直接アクセス（QRコード経由やブックマークなど）すると、そのままでは404になります。これを避けるため、ビルド後に `dist/index.html` を `dist/404.html` としても複製しています（[scripts/copy-404.mjs](scripts/copy-404.mjs)、`npm run build` 実行時に自動で走る `postbuild` スクリプト）。GitHub Pagesは未知のパスに対して `404.html` を返す仕様があるため、これによりReact Router側でルーティングを引き継げます。
+
 ## PWA（ホーム画面に追加して使う）
 
 `npm run build` の成果物には Web App Manifest（`manifest.webmanifest`）と Service Worker（`sw.js`）が含まれ、スマートフォンやPCのブラウザから「ホーム画面に追加」「インストール」でアプリのように起動できます。
