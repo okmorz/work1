@@ -15,7 +15,7 @@
 
 ## 現在の状態
 
-目標設定・支出記録/一覧・ダッシュボード・月末フィードバック・支出分析（統計ベース）・Supabase Authによるログイン・Supabaseへのデータ同期・PWA化まで実装済みです。GitHub Pagesへの実際のデプロイ実行は保留中です。
+目標設定・支出記録/一覧・ダッシュボード・月末フィードバック・支出分析（統計ベース）・Supabase Authによるログイン・Supabaseへのデータ同期・PWA化・使い方ガイドページまで実装済みです。GitHub Pages（`https://okmorz.github.io/work1/`）に実際にデプロイ済みです。
 
 ## セットアップ
 
@@ -67,6 +67,15 @@ npx supabase start        # ローカルにPostgres/Auth/Studioなどを起動�
 - **動作確認方法**: 開発サーバー（`npm run dev`）ではPWA機能は無効化されているため、`npm run build && npm run preview` でビルド成果物を確認してください。
 - Service Workerの更新方式は `autoUpdate`（新しいビルドが公開されると自動的に最新版へ更新されます）。
 
+## 使い方ガイドページ（/guide）
+
+初めて使う人向けの案内ページです。ログイン不要で誰でも直接開けます（`https://okmorz.github.io/work1/guide`）。ログイン画面・ダッシュボードの「使い方はこちら」リンクからも遷移できます。
+
+- アプリのURL・QRコード（[qrcode.react](https://github.com/zpao/qrcode.react)で生成）、アカウント作成手順、ホーム画面への追加（PWAインストール、iOS/Android別）、基本的な使い方の4ステップを掲載
+- 文言は [src/content/guide.ts](src/content/guide.ts) に集約しており、コンポーネントを触らずに文面を直せます
+- PWAインストール手順のスクリーンショットは [public/guide/](public/guide/) にプレースホルダー画像を置いています。実際の画面キャプチャに差し替える場合は、同じファイル名（`ios-step1.png` など）で上書きしてください
+- ページ自体も他の静的ファイルと同様にService Workerでプリキャッシュされるため、オフラインでも閲覧できます
+
 ## 認証・同期の挙動
 
 - ログインしていない状態で `/` 以下にアクセスすると `/login` にリダイレクトされます（Supabase Auth のEmail/Passwordでログイン・新規登録）。
@@ -89,8 +98,9 @@ src/
   types/                # ドメイン型（Expense, SavingsGoal）
   lib/                  # supabaseClient, localStorage操作, Supabase同期API, マージロジック, カテゴリ配色
   contexts/              # AuthContext（セッション）, DataContext（データ+同期の状態管理）
+  content/                # guide.ts（使い方ガイドページの文言・データ）
   utils/                # 日付計算・「使える金額」計算・月末フィードバック・支出分析(統計)ロジック
-  pages/                # 画面単位のコンポーネント（ログイン/ダッシュボード/支出入力・一覧/目標設定/支出分析）
+  pages/                # 画面単位のコンポーネント（ログイン/ガイド/ダッシュボード/支出入力・一覧/目標設定/支出分析）
   components/
     auth/                # RequireAuth（未ログイン時のリダイレクト）
     layout/              # 共通レイアウト・ナビゲーション・ログアウト
@@ -98,8 +108,10 @@ src/
     expense/             # 支出入力フォーム・一覧
     goal/                # 目標設定フォーム
     stats/               # 支出分析（月次推移・逸脱検知・前月比/前年同月比・曜日パターン・目標予測）
+    guide/               # 使い方ガイド用パーツ（PWAインストール手順・URLコピー）
 public/
   icon-*.png, favicon-48.png  # PWAアイコン
+  guide/                 # 使い方ガイドのスクリーンショット（プレースホルダー）
 supabase/
   config.toml            # ローカルSupabase CLIの設定
   migrations/             # テーブル定義・RLSポリシーのSQL

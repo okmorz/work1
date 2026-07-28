@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react'
-import { Navigate, useNavigate } from 'react-router-dom'
+import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 
 type Mode = 'signIn' | 'signUp'
@@ -99,6 +99,13 @@ export function LoginPage() {
       >
         {mode === 'signIn' ? 'アカウントを作成する' : 'ログインはこちら'}
       </button>
+
+      <Link
+        to="/guide"
+        className="mt-2 text-center text-sm text-gray-500 hover:underline"
+      >
+        使い方はこちら
+      </Link>
     </div>
   )
 }

@@ -11,16 +11,23 @@ export function DashboardPage() {
 
   if (!goal) {
     return (
-      <div className="rounded-lg bg-white p-6 text-center shadow-sm">
-        <p className="mb-4 text-sm text-gray-600">
-          まだ貯金目標が設定されていません。
-        </p>
-        <Link
-          to="/goal"
-          className="inline-block rounded-md bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700"
-        >
-          目標を設定する
-        </Link>
+      <div className="space-y-4">
+        <div className="flex justify-end">
+          <Link to="/guide" className="text-xs text-gray-400 hover:underline">
+            使い方はこちら
+          </Link>
+        </div>
+        <div className="rounded-lg bg-white p-6 text-center shadow-sm">
+          <p className="mb-4 text-sm text-gray-600">
+            まだ貯金目標が設定されていません。
+          </p>
+          <Link
+            to="/goal"
+            className="inline-block rounded-md bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700"
+          >
+            目標を設定する
+          </Link>
+        </div>
       </div>
     )
   }
@@ -30,7 +37,10 @@ export function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-end">
+      <div className="flex items-center justify-between">
+        <Link to="/guide" className="text-xs text-gray-400 hover:underline">
+          使い方はこちら
+        </Link>
         <SyncStatusIndicator />
       </div>
       <MonthEndFeedback goal={goal} expenses={expenses} />

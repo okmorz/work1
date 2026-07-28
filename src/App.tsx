@@ -6,6 +6,7 @@ import { DashboardPage } from './pages/DashboardPage'
 import { ExpenseFormPage } from './pages/ExpenseFormPage'
 import { ExpenseListPage } from './pages/ExpenseListPage'
 import { GoalSettingPage } from './pages/GoalSettingPage'
+import { GuidePage } from './pages/GuidePage'
 import { LoginPage } from './pages/LoginPage'
 import { StatsPage } from './pages/StatsPage'
 
@@ -13,6 +14,7 @@ function App() {
   return (
     <Routes>
       <Route path="/login" element={<LoginPage />} />
+      <Route path="/guide" element={<GuidePage />} />
       <Route element={<RequireAuth />}>
         <Route
           element={
