@@ -37,7 +37,7 @@ export function MonthEndFeedback({
   if (!target) return null
   if (!target.isPreview && dismissedMonth === target.targetMonth) return null
 
-  const { spent, diff } = monthlyBudgetSnapshot(
+  const { budget, actualSavings, diff } = monthlyBudgetSnapshot(
     goal,
     expenses,
     incomes,
@@ -75,14 +75,14 @@ export function MonthEndFeedback({
       </div>
 
       <p className="mt-2 text-sm text-gray-700">
-        {spent >= 0
-          ? `実績: ${formatYen(spent)}使いました（収入差し引き後）`
-          : `実績: ${formatYen(-spent)}貯金できました（収入が支出を上回りました）`}
-        （目標との差:{' '}
+        {actualSavings >= 0
+          ? `実績: ${formatYen(actualSavings)}貯金できました`
+          : `実績: ${formatYen(-actualSavings)}の赤字でした（支出が収入を上回りました）`}
+        （月間貯金目標 {formatYen(budget)} との差:{' '}
         <span
           className={`font-semibold ${isOver ? 'text-red-600' : 'text-green-700'}`}
         >
-          {isOver ? `${formatYen(-diff)} オーバー` : `${formatYen(diff)} 余裕あり`}
+          {isOver ? `${formatYen(-diff)} 未達` : `${formatYen(diff)} 上回る`}
         </span>
         ）
       </p>
@@ -100,7 +100,7 @@ export function MonthEndFeedback({
 
       <p className="mt-3 text-sm">
         {isOver
-          ? '目標より使いすぎています。来月は少しペースを落とすか、収入を増やす方法を考えてみましょう。'
+          ? '目標より貯金が少なめです。来月は少し支出を抑えるか、収入を増やす方法を考えてみましょう。'
           : '順調に貯金できています。このペースを維持しましょう！'}
       </p>
     </section>

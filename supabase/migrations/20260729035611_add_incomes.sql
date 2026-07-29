@@ -5,7 +5,7 @@ create table incomes (
   date date not null,
   amount integer not null,
   memo text,
-  category text not null check (category in ('給与','ボーナス','副業','その他')),
+  category text not null check (category in ('給与','副業','臨時収入','その他')),
   created_at timestamptz default now(),
   updated_at timestamptz default now()
 );

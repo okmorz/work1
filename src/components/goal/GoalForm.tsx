@@ -29,6 +29,9 @@ export function GoalForm({ initialGoal, onSubmit }: GoalFormProps) {
   const [amountInput, setAmountInput] = useState(
     initialGoal ? String(initialGoal.yearlyTargetAmount) : '',
   )
+  const [estimatedMonthlyIncomeInput, setEstimatedMonthlyIncomeInput] = useState(
+    initialGoal ? String(initialGoal.estimatedMonthlyIncome) : '',
+  )
 
   const months = Math.max(1, monthsBetweenInclusive(startMonth, endMonth))
   const amount = Number(amountInput) || 0
@@ -38,7 +41,12 @@ export function GoalForm({ initialGoal, onSubmit }: GoalFormProps) {
   function handleSubmit(e: FormEvent) {
     e.preventDefault()
     if (yearlyTargetAmount <= 0) return
-    onSubmit({ yearlyTargetAmount, startMonth, endMonth })
+    onSubmit({
+      yearlyTargetAmount,
+      startMonth,
+      endMonth,
+      estimatedMonthlyIncome: Number(estimatedMonthlyIncomeInput) || 0,
+    })
   }
 
   return (
@@ -109,6 +117,25 @@ export function GoalForm({ initialGoal, onSubmit }: GoalFormProps) {
           />
         </label>
       </div>
+
+      <label className="block">
+        <span className="mb-1 block text-sm font-medium text-gray-700">
+          月の平均収入（見込み）
+        </span>
+        <input
+          type="number"
+          inputMode="numeric"
+          min={0}
+          required
+          value={estimatedMonthlyIncomeInput}
+          onChange={(e) => setEstimatedMonthlyIncomeInput(e.target.value)}
+          className="w-full rounded-md border border-gray-300 px-3 py-2"
+          placeholder="例: 250000"
+        />
+        <span className="mt-1 block text-xs text-gray-500">
+          その月の収入をまだ記録していない間、この見込み額を暫定的に使って「使える金額」を計算します。収入を記録すると実績値に切り替わります。
+        </span>
+      </label>
 
       <p className="rounded-md bg-blue-50 px-3 py-2 text-sm text-blue-700">
         期間 {months}ヶ月・年間目標 {formatYen(yearlyTargetAmount)}

@@ -3,9 +3,12 @@ import type { Income } from '../../types/income'
 import type { SavingsGoal } from '../../types/savingsGoal'
 import {
   actualSavingsSoFar,
+  monthlyIncomeForBudget,
   spendableThisMonth,
   spendableToday,
+  totalAmount,
 } from '../../utils/calculations'
+import { toMonthKey } from '../../utils/date'
 import { formatYen } from '../../utils/format'
 
 interface SpendableAmountCardProps {
@@ -19,6 +22,7 @@ export function SpendableAmountCard({
   expenses,
   incomes,
 }: SpendableAmountCardProps) {
+  const currentMonth = toMonthKey(new Date())
   const monthly = spendableThisMonth(goal, expenses, incomes)
   const daily = spendableToday(goal, expenses, incomes)
   const savings = actualSavingsSoFar(goal, expenses, incomes)
@@ -27,9 +31,23 @@ export function SpendableAmountCard({
   const progressPercent = Math.round(progressRatio * 100)
   const progressBarWidth = Math.max(0, Math.min(100, progressPercent))
 
+  const monthIncomeActual = totalAmount(incomes, currentMonth)
+  const monthIncomeUsed = monthlyIncomeForBudget(goal, incomes, currentMonth)
+  const isIncomeEstimated = monthIncomeActual === 0 && monthIncomeUsed > 0
+
   return (
     <section className="rounded-lg bg-white p-6 text-center shadow-sm">
-      <p className="text-sm text-gray-500">今月あと使える金額</p>
+      <p className="text-sm text-gray-500">
+        今月の収入合計
+        {isIncomeEstimated && (
+          <span className="ml-1 text-xs text-gray-400">（見込み額）</span>
+        )}
+      </p>
+      <p className="text-lg font-semibold text-gray-700">
+        {formatYen(monthIncomeUsed)}
+      </p>
+
+      <p className="mt-4 text-sm text-gray-500">今月あと使える金額</p>
       <p
         className={`text-3xl font-bold ${monthly < 0 ? 'text-red-600' : 'text-blue-600'}`}
       >

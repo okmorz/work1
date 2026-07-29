@@ -20,25 +20,67 @@ export function totalAmount(records: DatedAmount[], monthKey?: string): number {
     .reduce((sum, r) => sum + r.amount, 0)
 }
 
-/** 純支出（支出合計 − 収入合計）。正なら使った分が収入より多い、負なら貯金できている */
-export function netSpent(
-  expenses: DatedAmount[],
+/** 実績貯金額（収入合計 − 支出合計）。正なら貯金できている、負なら赤字 */
+export function netSavings(
   incomes: DatedAmount[],
+  expenses: DatedAmount[],
   monthKey?: string,
 ): number {
-  return totalAmount(expenses, monthKey) - totalAmount(incomes, monthKey)
+  return totalAmount(incomes, monthKey) - totalAmount(expenses, monthKey)
 }
 
-/** 残り期間で使える総額（年間目標貯金額 − これまでの純支出） */
-export function remainingBudgetTotal(
+/**
+ * 確定済み実績貯金額 = 目標開始月から「対象月より前の完了済み月」までの（収入−支出）の合計。
+ * 対象月自体のデータは含めない（対象月はこれから使う／進行中の月として別枠で扱うため）。
+ */
+export function confirmedSavings(
   goal: SavingsGoal,
-  expensesSinceStart: Expense[],
-  incomesSinceStart: Income[],
+  allExpenses: Expense[],
+  allIncomes: Income[],
+  targetMonth: string,
 ): number {
-  return goal.yearlyTargetAmount - netSpent(expensesSinceStart, incomesSinceStart)
+  const expensesBefore = allExpenses.filter(
+    (e) => e.date.slice(0, 7) >= goal.startMonth && e.date.slice(0, 7) < targetMonth,
+  )
+  const incomesBefore = allIncomes.filter(
+    (i) => i.date.slice(0, 7) >= goal.startMonth && i.date.slice(0, 7) < targetMonth,
+  )
+  return netSavings(incomesBefore, expensesBefore)
 }
 
-/** 今月あと使える金額（収入が入るとその分増える） */
+/**
+ * targetMonthの月間貯金目標額 = 残り必要貯金額 ÷ 残り月数。
+ * 目標金額を期間の途中で変更しても、確定済み実績貯金額と残り月数から都度算出し直す
+ * （固定値として保存しないので、変更が次の表示から自動的に反映される）。
+ */
+export function monthlyBudgetTarget(
+  goal: SavingsGoal,
+  allExpenses: Expense[],
+  allIncomes: Income[],
+  targetMonth: string,
+): number {
+  const remainingMonths = remainingMonthsInclusive(targetMonth, goal.endMonth)
+  if (remainingMonths <= 0) return 0
+  const confirmed = confirmedSavings(goal, allExpenses, allIncomes, targetMonth)
+  const remainingNeeded = goal.yearlyTargetAmount - confirmed
+  return remainingNeeded / remainingMonths
+}
+
+/**
+ * targetMonthの収入額として使う値。
+ * その月の収入が1件でも記録されていれば実績合計を、無ければ目標の見込み月収を暫定的に使う。
+ */
+export function monthlyIncomeForBudget(
+  goal: SavingsGoal,
+  allIncomes: Income[],
+  targetMonth: string,
+): number {
+  const monthIncomes = allIncomes.filter((i) => i.date.slice(0, 7) === targetMonth)
+  if (monthIncomes.length > 0) return totalAmount(monthIncomes)
+  return goal.estimatedMonthlyIncome
+}
+
+/** 今月あと使える金額（今月の収入額 − 月間貯金目標額 − 今月の支出合計） */
 export function spendableThisMonth(
   goal: SavingsGoal,
   allExpenses: Expense[],
@@ -49,23 +91,13 @@ export function spendableThisMonth(
   const remainingMonths = remainingMonthsInclusive(currentMonth, goal.endMonth)
   if (remainingMonths <= 0) return 0
 
-  const expensesSinceStart = allExpenses.filter(
-    (e) => e.date.slice(0, 7) >= goal.startMonth,
-  )
-  const incomesSinceStart = allIncomes.filter(
-    (i) => i.date.slice(0, 7) >= goal.startMonth,
-  )
-  const remainingTotal = remainingBudgetTotal(
-    goal,
-    expensesSinceStart,
-    incomesSinceStart,
-  )
-  const perMonthBudget = remainingTotal / remainingMonths
-  const netSpentThisMonth = netSpent(allExpenses, allIncomes, currentMonth)
-  return perMonthBudget - netSpentThisMonth
+  const budgetTarget = monthlyBudgetTarget(goal, allExpenses, allIncomes, currentMonth)
+  const monthlyIncome = monthlyIncomeForBudget(goal, allIncomes, currentMonth)
+  const spentThisMonth = totalAmount(allExpenses, currentMonth)
+  return monthlyIncome - budgetTarget - spentThisMonth
 }
 
-/** 今日あと使える金額（今月の残り使える額 ÷ 今月の残り日数） */
+/** 今日あと使える金額（今月あと使える金額 ÷ 今月の残り日数） */
 export function spendableToday(
   goal: SavingsGoal,
   allExpenses: Expense[],
@@ -79,47 +111,27 @@ export function spendableToday(
 }
 
 export interface MonthlyBudgetSnapshot {
-  /** targetMonth開始時点で使えるはずだった月間予算 */
+  /** targetMonthの月間貯金目標額 */
   budget: number
-  /** targetMonthの純支出（支出−収入。負なら収入の方が多く貯金できている） */
-  spent: number
-  /** budget - spent（正なら余裕あり、負なら使いすぎ） */
+  /** targetMonthの実績貯金額（収入−支出、暫定値は使わない） */
+  actualSavings: number
+  /** actualSavings - budget（正なら目標達成/超過、負なら未達） */
   diff: number
 }
 
-/** targetMonth開始時点の実績を、その時点までの支出・収入だけを使って再現する */
+/** targetMonth（確定済み月）の目標と実績を比較する。月末フィードバックで使用 */
 export function monthlyBudgetSnapshot(
   goal: SavingsGoal,
   allExpenses: Expense[],
   allIncomes: Income[],
   targetMonth: string,
 ): MonthlyBudgetSnapshot {
-  const expensesThroughTargetMonth = allExpenses.filter(
-    (e) =>
-      e.date.slice(0, 7) >= goal.startMonth && e.date.slice(0, 7) <= targetMonth,
-  )
-  const incomesThroughTargetMonth = allIncomes.filter(
-    (i) =>
-      i.date.slice(0, 7) >= goal.startMonth && i.date.slice(0, 7) <= targetMonth,
-  )
-  const netBeforeTargetMonth = netSpent(
-    expensesThroughTargetMonth.filter((e) => e.date.slice(0, 7) < targetMonth),
-    incomesThroughTargetMonth.filter((i) => i.date.slice(0, 7) < targetMonth),
-  )
-  const remainingMonths = remainingMonthsInclusive(targetMonth, goal.endMonth)
-  const budget =
-    remainingMonths > 0
-      ? (goal.yearlyTargetAmount - netBeforeTargetMonth) / remainingMonths
-      : 0
-  const spent = netSpent(
-    expensesThroughTargetMonth,
-    incomesThroughTargetMonth,
-    targetMonth,
-  )
-  return { budget, spent, diff: budget - spent }
+  const budget = monthlyBudgetTarget(goal, allExpenses, allIncomes, targetMonth)
+  const actualSavings = netSavings(allIncomes, allExpenses, targetMonth)
+  return { budget, actualSavings, diff: actualSavings - budget }
 }
 
-/** targetMonthの支出・収入まで踏まえた、翌月あと使える金額 */
+/** targetMonthの実績まで踏まえた、翌月あと使える金額（翌月はまだ収入実績がないので見込み月収を使う） */
 export function nextMonthBudget(
   goal: SavingsGoal,
   allExpenses: Expense[],
@@ -129,22 +141,12 @@ export function nextMonthBudget(
   const nextMonth = addMonths(targetMonth, 1)
   const remainingMonths = remainingMonthsInclusive(nextMonth, goal.endMonth)
   if (remainingMonths <= 0) return 0
-  const netThroughTargetMonth = netSpent(
-    allExpenses.filter(
-      (e) =>
-        e.date.slice(0, 7) >= goal.startMonth &&
-        e.date.slice(0, 7) <= targetMonth,
-    ),
-    allIncomes.filter(
-      (i) =>
-        i.date.slice(0, 7) >= goal.startMonth &&
-        i.date.slice(0, 7) <= targetMonth,
-    ),
-  )
-  return (goal.yearlyTargetAmount - netThroughTargetMonth) / remainingMonths
+  const budgetTarget = monthlyBudgetTarget(goal, allExpenses, allIncomes, nextMonth)
+  const monthlyIncome = monthlyIncomeForBudget(goal, allIncomes, nextMonth)
+  return monthlyIncome - budgetTarget
 }
 
-/** 目標開始月からこれまでの実際の貯金額（収入合計 − 支出合計）。正なら貯金できている */
+/** 目標開始月からこれまでの実績貯金額（収入合計 − 支出合計、暫定値は使わない） */
 export function actualSavingsSoFar(
   goal: SavingsGoal,
   allExpenses: Expense[],
@@ -156,7 +158,7 @@ export function actualSavingsSoFar(
   const incomesSinceStart = allIncomes.filter(
     (i) => i.date.slice(0, 7) >= goal.startMonth,
   )
-  return -netSpent(expensesSinceStart, incomesSinceStart)
+  return netSavings(incomesSinceStart, expensesSinceStart)
 }
 
 export interface MonthEndFeedbackTarget {

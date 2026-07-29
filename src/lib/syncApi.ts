@@ -114,6 +114,7 @@ interface GoalRow {
   yearly_target_amount: number
   start_month: string
   end_month: string
+  estimated_monthly_income: number
 }
 
 function rowToGoal(row: GoalRow): SavingsGoal {
@@ -121,6 +122,7 @@ function rowToGoal(row: GoalRow): SavingsGoal {
     yearlyTargetAmount: row.yearly_target_amount,
     startMonth: row.start_month,
     endMonth: row.end_month,
+    estimatedMonthlyIncome: row.estimated_monthly_income,
     syncedAt: new Date().toISOString(),
   }
 }
@@ -130,7 +132,7 @@ export async function fetchRemoteGoal(
 ): Promise<SavingsGoal | null> {
   const { data, error } = await supabase
     .from('savings_goals')
-    .select('yearly_target_amount, start_month, end_month')
+    .select('yearly_target_amount, start_month, end_month, estimated_monthly_income')
     .eq('user_id', userId)
     .maybeSingle()
   if (error) throw error
@@ -147,6 +149,7 @@ export async function upsertRemoteGoal(
       yearly_target_amount: goal.yearlyTargetAmount,
       start_month: goal.startMonth,
       end_month: goal.endMonth,
+      estimated_monthly_income: goal.estimatedMonthlyIncome,
       updated_at: new Date().toISOString(),
     },
     { onConflict: 'user_id' },
