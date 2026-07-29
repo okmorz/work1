@@ -1,13 +1,11 @@
-import type { ReactNode } from 'react'
 import {
-  Bar,
-  BarChart,
   Cell,
-  LabelList,
+  Legend,
+  Pie,
+  PieChart,
   ResponsiveContainer,
   Tooltip,
-  XAxis,
-  YAxis,
+  type PieLabelRenderProps,
 } from 'recharts'
 import { CATEGORY_COLORS } from '../../lib/categoryColors'
 import { CATEGORIES, type Expense } from '../../types/expense'
@@ -25,9 +23,7 @@ export function CategoryBreakdownChart({
     value: expenses
       .filter((e) => e.category === category)
       .reduce((sum, e) => sum + e.amount, 0),
-  }))
-    .filter((d) => d.value > 0)
-    .sort((a, b) => b.value - a.value)
+  })).filter((d) => d.value > 0)
 
   if (data.length === 0) {
     return (
@@ -38,40 +34,36 @@ export function CategoryBreakdownChart({
   }
 
   return (
-    <div
-      className="rounded-lg bg-white p-4 shadow-sm"
-      style={{ height: 40 * data.length + 40 }}
-    >
+    <div className="rounded-lg bg-white p-4 shadow-sm" style={{ height: 340 }}>
       <ResponsiveContainer width="100%" height="100%">
-        <BarChart
-          data={data}
-          layout="vertical"
-          barCategoryGap="30%"
-          margin={{ top: 4, right: 56, bottom: 4, left: 8 }}
-        >
-          <XAxis type="number" hide />
-          <YAxis
-            type="category"
-            dataKey="category"
-            width={64}
-            tickLine={false}
-            axisLine={false}
-            tick={{ fill: '#52514e', fontSize: 13 }}
-          />
-          <Tooltip formatter={(value) => formatYen(Number(value))} />
-          <Bar dataKey="value" barSize={20} radius={[0, 4, 4, 0]}>
+        <PieChart>
+          <Pie
+            data={data}
+            dataKey="value"
+            nameKey="category"
+            cx="50%"
+            cy="45%"
+            outerRadius={95}
+            labelLine={{ stroke: '#c3c2b7' }}
+            label={(props: PieLabelRenderProps) =>
+              `${props.name} ${Math.round((props.percent ?? 0) * 100)}%`
+            }
+          >
             {data.map((entry) => (
-              <Cell key={entry.category} fill={CATEGORY_COLORS[entry.category]} />
+              <Cell
+                key={entry.category}
+                fill={CATEGORY_COLORS[entry.category]}
+                stroke="#fff"
+                strokeWidth={2}
+              />
             ))}
-            <LabelList
-              dataKey="value"
-              position="right"
-              formatter={(value: ReactNode) => formatYen(Number(value))}
-              fill="#52514e"
-              fontSize={12}
-            />
-          </Bar>
-        </BarChart>
+          </Pie>
+          <Tooltip formatter={(value) => formatYen(Number(value))} />
+          <Legend
+            verticalAlign="bottom"
+            wrapperStyle={{ fontSize: 12, color: '#52514e' }}
+          />
+        </PieChart>
       </ResponsiveContainer>
     </div>
   )
