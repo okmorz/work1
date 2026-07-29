@@ -17,8 +17,8 @@ export function AppLayout() {
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="border-b border-gray-200 bg-white">
-        <div className="mx-auto flex max-w-3xl items-center justify-between gap-4 px-4 py-3">
-          <nav className="flex gap-4 overflow-x-auto">
+        <div className="mx-auto flex max-w-3xl items-center justify-between gap-4 px-4 py-3 sm:max-w-4xl lg:max-w-5xl">
+          <nav className="flex gap-x-4 gap-y-2 overflow-x-auto sm:flex-wrap sm:overflow-visible">
             {NAV_ITEMS.map((item) => (
               <NavLink
                 key={item.to}
@@ -46,7 +46,7 @@ export function AppLayout() {
           </div>
         </div>
       </header>
-      <main className="mx-auto max-w-3xl px-4 py-6">
+      <main className="mx-auto max-w-3xl px-4 py-6 sm:max-w-4xl lg:max-w-5xl">
         <Outlet />
       </main>
     </div>
