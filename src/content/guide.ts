@@ -4,6 +4,16 @@
 /** 実際に公開されているアプリのURL。デプロイ先を変える場合はここを直す。 */
 export const APP_URL = 'https://okmorz.github.io/work1/'
 
+/**
+ * public/ 配下のファイルへの絶対パスを組み立てる。
+ * GitHub Pagesはサブパス（/work1/）配信のため、`base`（import.meta.env.BASE_URL）を
+ * 前置しないと画像が404になる（index.html内の参照とは違い、Viteのビルド時パス変換が
+ * 効かないため）。
+ */
+function publicAsset(path: string): string {
+  return `${import.meta.env.BASE_URL}${path}`
+}
+
 export const APP_OVERVIEW =
   '年間の貯金目標から、毎月・毎日あといくら使えるかを教えてくれる家計簿アプリです。'
 
@@ -34,8 +44,8 @@ export const PWA_INSTALL_GUIDES: PwaInstallGuide[] = [
       '右上の「追加」をタップすると完了',
     ],
     screenshots: [
-      { src: '/guide/ios-step1.png', alt: 'iOS: 共有ボタンをタップ' },
-      { src: '/guide/ios-step2.png', alt: 'iOS: ホーム画面に追加をタップ' },
+      { src: publicAsset('guide/ios-step1.png'), alt: 'iOS: 共有ボタンをタップ' },
+      { src: publicAsset('guide/ios-step2.png'), alt: 'iOS: ホーム画面に追加をタップ' },
     ],
   },
   {
@@ -49,8 +59,14 @@ export const PWA_INSTALL_GUIDES: PwaInstallGuide[] = [
       '「インストール」をタップすると完了',
     ],
     screenshots: [
-      { src: '/guide/android-step1.png', alt: 'Android: インストールバナー' },
-      { src: '/guide/android-step2.png', alt: 'Android: メニューからインストール' },
+      {
+        src: publicAsset('guide/android-step1.png'),
+        alt: 'Android: インストールバナー',
+      },
+      {
+        src: publicAsset('guide/android-step2.png'),
+        alt: 'Android: メニューからインストール',
+      },
     ],
   },
 ]
