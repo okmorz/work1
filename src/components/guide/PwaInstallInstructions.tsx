@@ -26,22 +26,11 @@ export function PwaInstallInstructions() {
 
       <p className="mb-3 text-sm text-gray-500">{guide.browserNote}</p>
 
-      <ol className="mb-4 list-decimal space-y-2 pl-5 text-sm text-gray-700">
+      <ol className="list-decimal space-y-2 pl-5 text-sm text-gray-700">
         {guide.steps.map((step, i) => (
           <li key={i}>{step}</li>
         ))}
       </ol>
-
-      <div className="flex gap-3 overflow-x-auto pb-2">
-        {guide.screenshots.map((shot) => (
-          <img
-            key={shot.src}
-            src={shot.src}
-            alt={shot.alt}
-            className="w-32 shrink-0 rounded-lg border border-gray-200 sm:w-40"
-          />
-        ))}
-      </div>
     </div>
   )
 }

@@ -85,7 +85,7 @@ GitHub Pagesはサーバー側のルーティングを持たない静的ホス�
 
 - アプリのURL・QRコード（[qrcode.react](https://github.com/zpao/qrcode.react)で生成）、アカウント作成手順、ホーム画面への追加（PWAインストール、iOS/Android別）、基本的な使い方の4ステップを掲載
 - 文言は [src/content/guide.ts](src/content/guide.ts) に集約しており、コンポーネントを触らずに文面を直せます
-- PWAインストール手順のスクリーンショットは [public/guide/](public/guide/) にプレースホルダー画像を置いています。実際の画面キャプチャに差し替える場合は、同じファイル名（`ios-step1.png` など）で上書きしてください
+- PWAインストール手順は番号付きの手順テキストのみで案内しています（実機のスクリーンショットは用意していません）
 - ページ自体も他の静的ファイルと同様にService Workerでプリキャッシュされるため、オフラインでも閲覧できます
 
 ## 収入機能と使える金額の計算
@@ -141,7 +141,6 @@ src/
     guide/               # 使い方ガイド用パーツ（PWAインストール手順・URLコピー）
 public/
   icon-*.png, favicon-48.png  # PWAアイコン
-  guide/                 # 使い方ガイドのスクリーンショット（プレースホルダー）
 supabase/
   config.toml            # ローカルSupabase CLIの設定
   migrations/             # テーブル定義・RLSポリシーのSQL
