@@ -22,6 +22,9 @@ import {
   saveSavingsGoal,
 } from '../lib/storage'
 import {
+  deleteAllRemoteExpenses,
+  deleteAllRemoteGoal,
+  deleteAllRemoteIncomes,
   deleteRemoteExpense,
   deleteRemoteIncome,
   fetchRemoteExpenses,
@@ -48,6 +51,8 @@ interface DataContextValue {
   updateIncome: (id: string, input: Omit<Income, 'id' | 'syncedAt'>) => void
   deleteIncome: (id: string) => void
   setGoal: (input: Omit<SavingsGoal, 'syncedAt'>) => void
+  /** 目標・支出・収入をすべて削除する（元に戻せない）。Supabase側の削除に失敗した場合はローカルデータを保持したまま例外を投げる */
+  resetAllData: () => Promise<void>
   syncStatus: SyncStatus
   lastSyncedAt: string | null
   syncError: string | null
@@ -364,6 +369,37 @@ export function DataProvider({ children }: { children: ReactNode }) {
     void pushGoal(nextGoal)
   }
 
+  async function resetAllData() {
+    if (!user) {
+      setExpenses([])
+      setIncomes([])
+      setGoalState(null)
+      clearAllLocalData()
+      return
+    }
+    setSyncStatus('syncing')
+    try {
+      // Supabase側を先に削除し、成功したときだけローカルも消す。
+      // 逆順だと、削除の途中でreconcileが走った際にリモートの残存データが復活しかねない。
+      await deleteAllRemoteExpenses(user.id)
+      await deleteAllRemoteIncomes(user.id)
+      await deleteAllRemoteGoal(user.id)
+
+      setExpenses([])
+      setIncomes([])
+      setGoalState(null)
+      clearAllLocalData()
+
+      setSyncStatus('synced')
+      setLastSyncedAt(new Date().toISOString())
+      setSyncError(null)
+    } catch (err) {
+      setSyncStatus('error')
+      setSyncError(errorMessage(err))
+      throw err
+    }
+  }
+
   return (
     <DataContext.Provider
       value={{
@@ -377,6 +413,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         updateIncome,
         deleteIncome,
         setGoal,
+        resetAllData,
         syncStatus,
         lastSyncedAt,
         syncError,

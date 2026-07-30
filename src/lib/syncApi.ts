@@ -58,6 +58,11 @@ export async function deleteRemoteExpense(id: string): Promise<void> {
   if (error) throw error
 }
 
+export async function deleteAllRemoteExpenses(userId: string): Promise<void> {
+  const { error } = await supabase.from('expenses').delete().eq('user_id', userId)
+  if (error) throw error
+}
+
 interface IncomeRow {
   id: string
   date: string
@@ -110,6 +115,11 @@ export async function deleteRemoteIncome(id: string): Promise<void> {
   if (error) throw error
 }
 
+export async function deleteAllRemoteIncomes(userId: string): Promise<void> {
+  const { error } = await supabase.from('incomes').delete().eq('user_id', userId)
+  if (error) throw error
+}
+
 interface GoalRow {
   yearly_target_amount: number
   start_month: string
@@ -154,5 +164,10 @@ export async function upsertRemoteGoal(
     },
     { onConflict: 'user_id' },
   )
+  if (error) throw error
+}
+
+export async function deleteAllRemoteGoal(userId: string): Promise<void> {
+  const { error } = await supabase.from('savings_goals').delete().eq('user_id', userId)
   if (error) throw error
 }
